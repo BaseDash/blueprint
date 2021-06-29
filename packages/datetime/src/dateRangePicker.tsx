@@ -264,7 +264,12 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
     }
 
     protected validateProps(props: DateRangePickerProps) {
-        const { defaultValue, initialMonth, maxDate, minDate, boundaryToModify, value } = props;
+        const { defaultValue, initialMonth, maxDate, minDate, boundaryToModify, value, ignoreRange } = props;
+
+        if (ignoreRange) {
+            return;
+        }
+
         const dateRange: DateRange = [minDate, maxDate];
 
         if (defaultValue != null && !DateUtils.isDayRangeInRange(defaultValue, dateRange)) {
@@ -309,7 +314,7 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
         return <div className={DateClasses.DATEPICKER_DAY_WRAPPER}>{date}</div>;
     };
 
-    private disabledDays = (day: Date) => !DateUtils.isDayInRange(day, [this.props.minDate, this.props.maxDate]);
+    private disabledDays = (day: Date) => !this.props.ignoreRange && !DateUtils.isDayInRange(day, [this.props.minDate, this.props.maxDate]);
 
     private getDisabledDaysModifier = () => {
         const {
@@ -392,7 +397,7 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
     };
 
     private renderCalendars(isShowingOneMonth: boolean) {
-        const { dayPickerProps, locale, localeUtils, maxDate, minDate } = this.props;
+        const { dayPickerProps, locale, localeUtils, maxDate, minDate, ignoreRange } = this.props;
         const dayPickerBaseProps: DayPickerProps = {
             locale,
             localeUtils,
@@ -412,11 +417,11 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
                     {...dayPickerBaseProps}
                     captionElement={this.renderSingleCaption}
                     navbarElement={this.renderSingleNavbar}
-                    fromMonth={minDate}
+                    fromMonth={ignoreRange ? undefined : minDate}
                     month={this.state.leftView.getFullDate()}
                     numberOfMonths={1}
                     onMonthChange={this.handleLeftMonthChange}
-                    toMonth={maxDate}
+                    toMonth={ignoreRange ? undefined : maxDate}
                     renderDay={dayPickerProps?.renderDay ?? this.renderDay}
                 />
             );
@@ -428,11 +433,11 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
                     canChangeMonth={true}
                     captionElement={this.renderLeftCaption}
                     navbarElement={this.renderLeftNavbar}
-                    fromMonth={minDate}
+                    fromMonth={ignoreRange ? undefined : minDate}
                     month={this.state.leftView.getFullDate()}
                     numberOfMonths={1}
                     onMonthChange={this.handleLeftMonthChange}
-                    toMonth={DateUtils.getDatePreviousMonth(maxDate)}
+                    toMonth={ignoreRange ? undefined : DateUtils.getDatePreviousMonth(maxDate)}
                     renderDay={dayPickerProps?.renderDay ?? this.renderDay}
                 />,
                 <DayPicker
@@ -441,11 +446,11 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
                     canChangeMonth={true}
                     captionElement={this.renderRightCaption}
                     navbarElement={this.renderRightNavbar}
-                    fromMonth={DateUtils.getDateNextMonth(minDate)}
+                    fromMonth={ignoreRange ? undefined : DateUtils.getDateNextMonth(minDate)}
                     month={this.state.rightView.getFullDate()}
                     numberOfMonths={1}
                     onMonthChange={this.handleRightMonthChange}
-                    toMonth={maxDate}
+                    toMonth={ignoreRange ? undefined : maxDate}
                     renderDay={dayPickerProps?.renderDay ?? this.renderDay}
                 />,
             ];
@@ -453,7 +458,7 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
     }
 
     private renderSingleNavbar = (navbarProps: NavbarElementProps) => (
-        <DatePickerNavbar {...navbarProps} maxDate={this.props.maxDate} minDate={this.props.minDate} />
+        <DatePickerNavbar {...navbarProps} maxDate={this.props.maxDate} minDate={this.props.minDate} ignoreRange={this.props.ignoreRange} />
     );
 
     private renderLeftNavbar = (navbarProps: NavbarElementProps) => (
@@ -462,6 +467,7 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
             hideRightNavButton={this.props.contiguousCalendarMonths}
             maxDate={this.props.maxDate}
             minDate={this.props.minDate}
+            ignoreRange={this.props.ignoreRange}
         />
     );
 
@@ -471,6 +477,7 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
             hideLeftNavButton={this.props.contiguousCalendarMonths}
             maxDate={this.props.maxDate}
             minDate={this.props.minDate}
+            ignoreRange={this.props.ignoreRange}
         />
     );
 
@@ -644,10 +651,13 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
         const minMonthAndYear = new MonthAndYear(minDate.getMonth(), minDate.getFullYear());
         const maxMonthAndYear = new MonthAndYear(adjustedMaxDate.getMonth(), adjustedMaxDate.getFullYear());
 
-        if (leftView.isBefore(minMonthAndYear)) {
-            leftView = minMonthAndYear;
-        } else if (leftView.isAfter(maxMonthAndYear)) {
-            leftView = maxMonthAndYear;
+        if (!this.props.ignoreRange) {
+            if (leftView.isBefore(minMonthAndYear)) {
+                leftView = minMonthAndYear;
+            } else if (leftView.isAfter(maxMonthAndYear)) {
+                leftView = maxMonthAndYear;
+            }
+
         }
 
         let rightView = this.state.rightView.clone();
@@ -667,10 +677,12 @@ export class DateRangePicker extends AbstractPureComponent<DateRangePickerProps,
         const minMonthAndYear = MonthAndYear.fromDate(adjustedMinDate);
         const maxMonthAndYear = MonthAndYear.fromDate(maxDate);
 
-        if (rightView.isBefore(minMonthAndYear)) {
-            rightView = minMonthAndYear;
-        } else if (rightView.isAfter(maxMonthAndYear)) {
-            rightView = maxMonthAndYear;
+        if (!this.props.ignoreRange) {
+            if (rightView.isBefore(minMonthAndYear)) {
+                rightView = minMonthAndYear;
+            } else if (rightView.isAfter(maxMonthAndYear)) {
+                rightView = maxMonthAndYear;
+            }
         }
 
         let leftView = this.state.leftView.clone();

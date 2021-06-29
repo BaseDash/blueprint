@@ -112,6 +112,7 @@ export class DatePicker extends AbstractPureComponent<DatePickerProps, DatePicke
         clearButtonText: "Clear",
         dayPickerProps: {},
         highlightCurrentDay: false,
+        ignoreRange: false,
         maxDate: getDefaultMaxDate(),
         minDate: getDefaultMinDate(),
         reverseMonthAndYearMenus: false,
@@ -140,7 +141,7 @@ export class DatePicker extends AbstractPureComponent<DatePickerProps, DatePicke
     }
 
     public render() {
-        const { className, dayPickerProps, locale, localeUtils, maxDate, minDate, showActionsBar } = this.props;
+        const { className, dayPickerProps, locale, localeUtils, maxDate, minDate, showActionsBar, ignoreRange } = this.props;
         const { displayMonth, displayYear } = this.state;
 
         return (
@@ -157,12 +158,12 @@ export class DatePicker extends AbstractPureComponent<DatePickerProps, DatePicke
                         captionElement={this.renderCaption}
                         navbarElement={this.renderNavbar}
                         disabledDays={this.getDisabledDaysModifier()}
-                        fromMonth={minDate}
+                        fromMonth={ignoreRange ? undefined : minDate}
                         month={new Date(displayYear, displayMonth)}
                         onDayClick={this.handleDayClick}
                         onMonthChange={this.handleMonthChange}
                         selectedDays={this.state.value}
-                        toMonth={maxDate}
+                        toMonth={ignoreRange ? undefined : maxDate}
                         renderDay={dayPickerProps?.renderDay ?? this.renderDay}
                     />
                     {this.maybeRenderTimePicker()}
@@ -196,7 +197,11 @@ export class DatePicker extends AbstractPureComponent<DatePickerProps, DatePicke
     }
 
     protected validateProps(props: DatePickerProps) {
-        const { defaultValue, initialMonth, maxDate, minDate, value } = props;
+        const { defaultValue, initialMonth, maxDate, minDate, value, ignoreRange } = props;
+        // None of the validations apply if ignoring the date range
+        if (ignoreRange) {
+            return;
+        }
         if (defaultValue != null && !DateUtils.isDayInRange(defaultValue, [minDate, maxDate])) {
             console.error(Errors.DATEPICKER_DEFAULT_VALUE_INVALID);
         }
@@ -235,7 +240,7 @@ export class DatePicker extends AbstractPureComponent<DatePickerProps, DatePicke
         return <div className={Classes.DATEPICKER_DAY_WRAPPER}>{date}</div>;
     };
 
-    private disabledDays = (day: Date) => !DateUtils.isDayInRange(day, [this.props.minDate, this.props.maxDate]);
+    private disabledDays = (day: Date) => !this.props.ignoreRange && !DateUtils.isDayInRange(day, [this.props.minDate, this.props.maxDate]);
 
     private getDisabledDaysModifier = () => {
         const {
@@ -256,7 +261,7 @@ export class DatePicker extends AbstractPureComponent<DatePickerProps, DatePicke
     );
 
     private renderNavbar = (props: NavbarElementProps) => (
-        <DatePickerNavbar {...props} maxDate={this.props.maxDate} minDate={this.props.minDate} />
+        <DatePickerNavbar {...props} maxDate={this.props.maxDate} minDate={this.props.minDate} ignoreRange={this.props.ignoreRange} />
     );
 
     private renderOptionsBar() {
@@ -271,12 +276,12 @@ export class DatePicker extends AbstractPureComponent<DatePickerProps, DatePicke
     }
 
     private maybeRenderTimePicker() {
-        const { timePrecision, timePickerProps, minDate, maxDate } = this.props;
+        const { timePrecision, timePickerProps, minDate, maxDate, ignoreRange } = this.props;
         if (timePrecision == null && timePickerProps === DatePicker.defaultProps.timePickerProps) {
             return null;
         }
-        const applyMin = DateUtils.areSameDay(this.state.value, minDate);
-        const applyMax = DateUtils.areSameDay(this.state.value, maxDate);
+        const applyMin = !ignoreRange && DateUtils.areSameDay(this.state.value, minDate);
+        const applyMax = !ignoreRange && DateUtils.areSameDay(this.state.value, maxDate);
         return (
             <div className={Classes.DATEPICKER_TIMEPICKER_WRAPPER}>
                 <TimePicker
@@ -371,7 +376,7 @@ export class DatePicker extends AbstractPureComponent<DatePickerProps, DatePicke
     };
 
     private computeValidDateInSpecifiedMonthYear(displayYear: number, displayMonth: number): Date {
-        const { minDate, maxDate } = this.props;
+        const { minDate, maxDate, ignoreRange } = this.props;
         const { selectedDay } = this.state;
         // month is 0-based, date is 1-based. date 0 is last day of previous month.
         const maxDaysInMonth = new Date(displayYear, displayMonth + 1, 0).getDate();
@@ -380,10 +385,12 @@ export class DatePicker extends AbstractPureComponent<DatePickerProps, DatePicke
         // 12:00 matches the underlying react-day-picker timestamp behavior
         const value = DateUtils.getDateTime(new Date(displayYear, displayMonth, displayDate, 12), this.state.value);
         // clamp between min and max dates
-        if (value < minDate) {
-            return minDate;
-        } else if (value > maxDate) {
-            return maxDate;
+        if (!ignoreRange) {
+            if (value < minDate) {
+                return minDate;
+            } else if (value > maxDate) {
+                return maxDate;
+            }
         }
         return value;
     }

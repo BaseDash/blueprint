@@ -31,12 +31,14 @@ export interface DatePickerExampleState {
     showActionsBar: boolean;
     timePrecision: TimePrecision | undefined;
     showTimeArrowButtons: boolean;
+    ignoreRange: boolean;
 }
 
 export class DatePickerExample extends React.PureComponent<ExampleProps, DatePickerExampleState> {
     public state: DatePickerExampleState = {
         date: null,
         highlightCurrentDay: false,
+        ignoreRange: false,
         reverseMonthAndYearMenus: false,
         shortcuts: false,
         showActionsBar: false,
@@ -60,6 +62,10 @@ export class DatePickerExample extends React.PureComponent<ExampleProps, DatePic
         this.setState({ showTimeArrowButtons }),
     );
 
+    private toggleIgnoreRange = handleBooleanChange(ignoreRange =>
+        this.setState({ ignoreRange }),
+    );
+
     public render() {
         const { date, showTimeArrowButtons, ...props } = this.state;
 
@@ -77,6 +83,11 @@ export class DatePickerExample extends React.PureComponent<ExampleProps, DatePic
                     checked={props.reverseMonthAndYearMenus}
                     label="Reverse month and year menus"
                     onChange={this.toggleReverseMenus}
+                />
+                <Switch
+                    checked={this.state.ignoreRange}
+                    label="Ignore max and min date range"
+                    onChange={this.toggleIgnoreRange}
                 />
                 <PrecisionSelect
                     allowNone={true}

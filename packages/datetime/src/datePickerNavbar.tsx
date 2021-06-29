@@ -27,6 +27,7 @@ import { areSameMonth } from "./common/dateUtils";
 export interface DatePickerNavbarProps extends NavbarElementProps {
     maxDate: Date;
     minDate: Date;
+    ignoreRange: boolean;
 
     hideLeftNavButton?: boolean;
     hideRightNavButton?: boolean;
@@ -34,14 +35,14 @@ export interface DatePickerNavbarProps extends NavbarElementProps {
 
 export class DatePickerNavbar extends React.PureComponent<DatePickerNavbarProps> {
     public render() {
-        const { classNames: classes, month, maxDate, minDate } = this.props;
+        const { classNames: classes, month, maxDate, minDate, ignoreRange } = this.props;
 
         return (
             <div className={classNames(Classes.DATEPICKER_NAVBAR, classes.navBar)}>
                 {this.props.hideLeftNavButton || (
                     <Button
                         className={classes.navButtonPrev}
-                        disabled={areSameMonth(month, minDate)}
+                        disabled={!ignoreRange && areSameMonth(month, minDate)}
                         icon={<ChevronLeft />}
                         minimal={true}
                         onClick={this.handlePreviousClick}
@@ -50,7 +51,7 @@ export class DatePickerNavbar extends React.PureComponent<DatePickerNavbarProps>
                 {this.props.hideRightNavButton || (
                     <Button
                         className={classes.navButtonNext}
-                        disabled={areSameMonth(month, maxDate)}
+                        disabled={!ignoreRange && areSameMonth(month, maxDate)}
                         icon={<ChevronRight />}
                         minimal={true}
                         onClick={this.handleNextClick}

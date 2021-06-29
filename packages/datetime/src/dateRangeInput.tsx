@@ -966,7 +966,7 @@ export class DateRangeInput extends AbstractPureComponent<DateRangeInputProps, D
     };
 
     private isDateValidAndInRange = (date: Date | false | null): date is Date => {
-        return isDateValid(date) && isDayInRange(date, [this.props.minDate, this.props.maxDate]);
+        return isDateValid(date) && (this.props.ignoreRange || isDayInRange(date, [this.props.minDate, this.props.maxDate]));
     };
 
     private isNextDateRangeValid(nextDate: Date | false | null, boundary: Boundary): nextDate is Date {

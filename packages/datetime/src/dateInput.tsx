@@ -163,6 +163,7 @@ export class DateInput extends AbstractPureComponent<DateInputProps, DateInputSt
         closeOnSelection: true,
         dayPickerProps: {},
         disabled: false,
+        ignoreRange: false,
         invalidDateMessage: "Invalid date",
         maxDate: getDefaultMaxDate(),
         minDate: getDefaultMinDate(),
@@ -287,7 +288,7 @@ export class DateInput extends AbstractPureComponent<DateInputProps, DateInputSt
     }
 
     private isDateInRange(value: Date) {
-        return isDayInRange(value, [this.props.minDate, this.props.maxDate]);
+        return this.props.ignoreRange || isDayInRange(value, [this.props.minDate, this.props.maxDate]);
     }
 
     private handleClosePopover = (e?: React.SyntheticEvent<HTMLElement>) => {

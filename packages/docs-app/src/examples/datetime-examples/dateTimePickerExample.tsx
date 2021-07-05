@@ -17,7 +17,7 @@
 import * as React from "react";
 
 import { Classes } from "@blueprintjs/core";
-import { DateTimePicker } from "@blueprintjs/datetime";
+import { DateTimePicker } from "@basedash/datetime";
 import { Example, IExampleProps } from "@blueprintjs/docs-theme";
 
 import { MomentDate } from "./common/momentDate";

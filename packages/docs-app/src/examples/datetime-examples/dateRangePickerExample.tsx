@@ -18,7 +18,7 @@ import moment from "moment";
 import * as React from "react";
 
 import { Classes, H5, HTMLSelect, Label, Switch } from "@blueprintjs/core";
-import { DateRange, DateRangePicker, TimePrecision } from "@blueprintjs/datetime";
+import { DateRange, DateRangePicker, TimePrecision } from "@basedash/datetime";
 import {
     Example,
     handleBooleanChange,
